@@ -308,11 +308,11 @@ def save_res_img(out_dir, image_path, res_img):
 
 
 def gen_video_out(out_dir, seq_name):
-    outVideo_fileName = osp.join(out_dir, seq_name+'.mp4')
+    outVideo_fileName = osp.join(os.getcwd(),out_dir, seq_name+'.mp4')
     print(f">> Generating video in {outVideo_fileName}")
 
-    in_dir = osp.abspath(osp.join(out_dir, "rendered"))
-    out_path = osp.abspath(osp.join(out_dir, seq_name+'.mp4'))
+    in_dir = osp.abspath(osp.join(os.getcwd(),out_dir, "rendered"))
+    out_path = osp.abspath(osp.join(os.getcwd(),out_dir, seq_name+'.mp4'))
     ffmpeg_cmd = f'ffmpeg -y -f image2 -framerate 25 -pattern_type glob -i "{in_dir}/*.jpg"  -pix_fmt yuv420p -c:v libx264 -x264opts keyint=25:min-keyint=25:scenecut=-1 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" {out_path}'
     os.system(ffmpeg_cmd)
     # print(ffmpeg_cmd.split())

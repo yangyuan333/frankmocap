@@ -10,7 +10,7 @@ import cv2
 import argparse
 import json
 import pickle
-
+sys.path.append('./')
 ############# input parameters  #############
 from demo.demo_options import DemoOptions
 from bodymocap.body_mocap_api import BodyMocap
@@ -244,4 +244,11 @@ def main():
 
 
 if __name__ == '__main__':
+    
+    sys.argv = [
+        "", 
+        "--input_path=./sample_data/han_hand_short.mp4",
+        "--out_dir=./mocap_output",
+        ]
+
     main()
