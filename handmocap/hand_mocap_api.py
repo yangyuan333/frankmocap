@@ -103,10 +103,10 @@ class HandMocap:
         assert hand_type in ['left_hand', 'right_hand']
         img_cropped, bbox_scale_ratio, bbox_processed = \
             self.__pad_and_resize(raw_image, hand_bbox, add_margin)
-        
+
         #horizontal Flip to make it as right hand
         if hand_type=='left_hand':
-            img_cropped = np.ascontiguousarray(img_cropped[:, ::-1,:], img_cropped.dtype) 
+            img_cropped = np.ascontiguousarray(img_cropped[:, ::-1,:], img_cropped.dtype) # 图像直接反转
         else:
             assert hand_type == 'right_hand'
 
@@ -157,7 +157,7 @@ class HandMocap:
                 
                 if bbox is None: 
                     continue
-                else:
+                else: # 裁剪图像，并将左手反转成右手
                     img_cropped, norm_img, bbox_scale_ratio, bbox_processed = \
                         self.__process_hand_bbox(img_original, hand_bboxes[hand_type], hand_type, add_margin)
                     hand_bboxes_processed[hand_type] = bbox_processed
@@ -177,10 +177,10 @@ class HandMocap:
 
                         if hand_type == 'left_hand':
                             cam[1] *= -1
-                            pred_verts_origin[:, 0] *= -1
-                            faces = faces[:, ::-1]
-                            pred_pose[:, 1::3] *= -1
-                            pred_pose[:, 2::3] *= -1
+                            pred_verts_origin[:, 0] *= -1 # x偏移反向
+                            faces = faces[:, ::-1] # 这个为啥要反向
+                            pred_pose[:, 1::3] *= -1 # 每个joint旋转pose的第二轴乘-1
+                            pred_pose[:, 2::3] *= -1 # 每个joint旋转pose的第三轴乘-1
                             pred_joints[:, 0] *= -1
 
                         pred_output[hand_type] = dict()

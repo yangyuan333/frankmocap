@@ -245,12 +245,15 @@ def main():
 
 if __name__ == '__main__':
 
-    sys.argv = [
-        "", 
-        "--input_path=../Data/img",
-        "--out_dir=../Data/Frankmocap",
-        "--save_mesh",
-        "--save_pred_pkl"
-        ]
-
-    main()
+    import glob
+    for seqDir in glob.glob(os.path.join(R'\\105.1.1.2\BodyStudio\data_for_laboratory_site','*'))[1:]:
+        for camDir in glob.glob(os.path.join(seqDir,'*')):
+            sys.argv = [
+                "", 
+                "--input_path="+camDir,
+                "--out_dir="+os.path.join("../batchData/Frankmocap",os.path.basename(os.path.dirname(camDir)),os.path.basename(camDir)),
+                "--save_mesh",
+                "--save_pred_pkl",
+                "--no_display"
+                ]
+            main()

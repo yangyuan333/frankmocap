@@ -43,8 +43,10 @@ class Third_View_Detector(BodyPoseEstimator):
     with a type-agnostic hand detector (https://github.com/ddshan/hand_detector.d2)
     """
     def __init__(self):
+        ## 初始化 2D body pose model
         super(Third_View_Detector, self).__init__()
         print("Loading Third View Hand Detector")
+        ## 初始化 2D hand pose model
         self.__load_hand_detector()
     
 
@@ -72,11 +74,11 @@ class Third_View_Detector(BodyPoseEstimator):
                 len(body_bbox) == len(hand_bbox), where hand_bbox can be None if not valid
         '''
         # get body pose
-        body_pose_list, body_bbox_list = self.detect_body_pose(img)
+        body_pose_list, body_bbox_list = self.detect_body_pose(img) ## 利用 轻量级openpose
         # assert len(body_pose_list) == 1, "Current version only supports one person"
 
         # get raw hand bboxes
-        raw_hand_bboxes = self.__get_raw_hand_bbox(img)
+        raw_hand_bboxes = self.__get_raw_hand_bbox(img) ## 手的2D关键点不区分左右
         hand_bbox_list = [None, ] * len(body_pose_list)
         num_bbox = raw_hand_bboxes.shape[0]
 

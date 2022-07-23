@@ -111,7 +111,7 @@ def setup_input(args):
         return input_type, cap
 
     elif input_type =='image_dir':
-        image_list = gnu.get_all_files(args.input_path, image_exts, "relative") 
+        image_list = gnu.get_all_files(args.input_path, image_exts, "name_only") 
         image_list = [ osp.join(args.input_path, image_name) for image_name in image_list ]
         __img_seq_setup(args)
         return input_type, image_list
@@ -302,7 +302,8 @@ def save_res_img(out_dir, image_path, res_img):
     img_name = osp.basename(image_path)
     img_name = img_name[:-4] + '.jpg'           #Always save as jpg
     res_img_path = osp.join(out_dir, img_name)
-    gnu.make_subdir(res_img_path)
+    # gnu.make_subdir(res_img_path)
+    os.makedirs(os.path.dirname(res_img_path),exist_ok=True)
     cv2.imwrite(res_img_path, res_img)
     print(f"Visualization saved: {res_img_path}")
 

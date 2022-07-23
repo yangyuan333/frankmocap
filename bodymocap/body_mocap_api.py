@@ -22,7 +22,7 @@ class BodyMocap(object):
         # Load parametric model (SMPLX or SMPL)
         if use_smplx:
             smplModelPath = smpl_dir + '/SMPLX_NEUTRAL.pkl'
-            self.smpl = SMPLX(smpl_dir,
+            self.smpl = SMPLX(smpl_dir, # 相比于 SMPLX 多了9个额外的joints回归
                     batch_size=1,
                     num_betas = 10,
                     use_pca = False,
@@ -32,11 +32,11 @@ class BodyMocap(object):
             smplModelPath = smpl_dir + '/basicModel_neutral_lbs_10_207_0_v1.0.0.pkl'
             self.smpl = SMPL(smplModelPath, batch_size=1, create_transl=False).to(self.device)
             self.use_smplx = False
-            
+
         #Load pre-trained neural network 
         SMPL_MEAN_PARAMS = './extra_data/body_module/data_from_spin/smpl_mean_params.npz'
-        self.model_regressor = hmr(SMPL_MEAN_PARAMS).to(self.device)
-        checkpoint = torch.load(regressor_checkpoint)
+        self.model_regressor = hmr(SMPL_MEAN_PARAMS).to(self.device) ## 确实是SMPL的参数 用Bottleneck更新了HMR架构
+        checkpoint = torch.load(regressor_checkpoint) ## smplx参数
         self.model_regressor.load_state_dict(checkpoint['model'], strict=False)
         self.model_regressor.eval()
         

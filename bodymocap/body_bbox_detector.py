@@ -57,13 +57,13 @@ class BodyPoseEstimator(object):
         if not cpu:
             tensor_img = tensor_img.cuda()
 
-        stages_output = self.model(tensor_img)
+        stages_output = self.model(tensor_img) ## 这个输出了个什么
 
-        stage2_heatmaps = stages_output[-2]
+        stage2_heatmaps = stages_output[-2] ## 为啥是 19 dim，不是18个关键点吗
         heatmaps = np.transpose(stage2_heatmaps.squeeze().cpu().data.numpy(), (1, 2, 0))
         heatmaps = cv2.resize(heatmaps, (0, 0), fx=upsample_ratio, fy=upsample_ratio, interpolation=cv2.INTER_CUBIC)
 
-        stage2_pafs = stages_output[-1]
+        stage2_pafs = stages_output[-1] ## 为啥是38dim，这个应该是骨架的xy
         pafs = np.transpose(stage2_pafs.squeeze().cpu().data.numpy(), (1, 2, 0))
         pafs = cv2.resize(pafs, (0, 0), fx=upsample_ratio, fy=upsample_ratio, interpolation=cv2.INTER_CUBIC)
 
@@ -78,7 +78,7 @@ class BodyPoseEstimator(object):
         upsample_ratio = 4
         orig_img = img.copy()
 
-        # forward
+        # forward ## 轻量级的openpose
         heatmaps, pafs, scale, pad = self.__infer_fast(img, 
             input_height_size=256, stride=stride, upsample_ratio=upsample_ratio)
 
@@ -86,9 +86,9 @@ class BodyPoseEstimator(object):
         all_keypoints_by_type = []
         num_keypoints = Pose.num_kpts
         for kpt_idx in range(num_keypoints):  # 19th for bg
-            total_keypoints_num += extract_keypoints(heatmaps[:, :, kpt_idx], all_keypoints_by_type, total_keypoints_num)
+            total_keypoints_num += extract_keypoints(heatmaps[:, :, kpt_idx], all_keypoints_by_type, total_keypoints_num) ## 利用NMS来过去关节点坐标(存疑的是NMS为什么不是根据score来排序的)
         
-        pose_entries, all_keypoints = group_keypoints(all_keypoints_by_type, pafs, demo=True)
+        pose_entries, all_keypoints = group_keypoints(all_keypoints_by_type, pafs, demo=True) # 借助PAF组合过滤keypoints, pose_entries是每个人的keypoints序号，all_keypoints是所有keypoints坐标
         for kpt_id in range(all_keypoints.shape[0]):
             all_keypoints[kpt_id, 0] = (all_keypoints[kpt_id, 0] * stride / upsample_ratio - pad[1]) / scale
             all_keypoints[kpt_id, 1] = (all_keypoints[kpt_id, 1] * stride / upsample_ratio - pad[0]) / scale
@@ -110,11 +110,11 @@ class BodyPoseEstimator(object):
                 if pose_entries[n][kpt_id] != -1.0:  # keypoint was found
                     pose_keypoints[kpt_id, 0] = int(all_keypoints[int(pose_entries[n][kpt_id]), 0])
                     pose_keypoints[kpt_id, 1] = int(all_keypoints[int(pose_entries[n][kpt_id]), 1])
-            pose = Pose(pose_keypoints, pose_entries[n][18]) 
+            pose = Pose(pose_keypoints, pose_entries[n][18]) ## 建立bbox和低通滤波器
             current_poses.append(pose.keypoints)
             current_bbox.append(np.array(pose.bbox))
 
-        # enlarge the bbox
+        # enlarge the bbox # 按比例增大bbox 防止bbox没有框住完整的人体
         for i, bbox in enumerate(current_bbox):
             x, y, w, h = bbox
             margin = 0.05

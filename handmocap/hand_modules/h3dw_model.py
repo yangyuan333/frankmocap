@@ -35,13 +35,13 @@ def extract_hand_output(output, hand_type, hand_info, top_finger_joints_type='av
 
     vertices = output.vertices
     joints = output.joints
-    vertices_shift = vertices - joints[:, hand_start_idx:hand_start_idx+1, :]
+    vertices_shift = vertices - joints[:, hand_start_idx:hand_start_idx+1, :] # 相对于40号节点的偏移(右手)
 
     hand_verts_idx = torch.Tensor(hand_info[f'{hand_type}_hand_verts_idx']).long()
     if use_cuda:
         hand_verts_idx = hand_verts_idx.cuda()
 
-    hand_verts = vertices[:, hand_verts_idx, :]
+    hand_verts = vertices[:, hand_verts_idx, :] # 右手顶点序号
     hand_verts_shift = hand_verts - joints[:, hand_start_idx:hand_start_idx+1, :]
 
    # Hand joints
@@ -97,7 +97,7 @@ class H3DWModel(object):
             nb, opt.input_nc, self.inputSize, self.inputSize)
       
         # joints 2d
-        self.keypoints = self.Tensor(nb, opt.num_joints, 2)
+        self.keypoints = self.Tensor(nb, opt.num_joints, 2) ## 21个2D关键点，包含指尖？
         self.keypoints_weights = self.Tensor(nb, opt.num_joints)
 
         # mano pose params
@@ -105,7 +105,7 @@ class H3DWModel(object):
         self.mano_params_weight = self.Tensor(nb, 1)
 
         # joints 3d
-        self.joints_3d = self.Tensor(nb, opt.num_joints, 3)
+        self.joints_3d = self.Tensor(nb, opt.num_joints, 3) # 21个关键点
         self.joints_3d_weight = self.Tensor(nb, opt.num_joints, 1)
 
         # load mean params, the mean params are from HMR
@@ -116,7 +116,7 @@ class H3DWModel(object):
         # set differential SMPL (implemented with pytorch) and smpl_renderer
         # smplx_model_path = osp.join(opt.model_root, opt.smplx_model_file)
         smplx_model_path = opt.smplx_model_file
-        self.smplx = smplx.create(
+        self.smplx = smplx.create( ## 正常的smplx模型
             smplx_model_path, 
             model_type = "smplx", 
             batch_size = self.batch_size,
@@ -147,7 +147,7 @@ class H3DWModel(object):
 
     def load_params(self):
         # load mean params first
-        mean_vals = gnu.load_pkl(self.mean_param_file)
+        mean_vals = gnu.load_pkl(self.mean_param_file) # 48 dim
         mean_params = np.zeros((1, self.total_params_dim))
 
         # set camera model first
@@ -157,7 +157,7 @@ class H3DWModel(object):
         mean_pose = mean_vals['mean_pose'][3:]
         # set hand global rotation
         mean_pose = np.concatenate( (np.zeros((3,)), mean_pose) )
-        mean_pose = mean_pose[None, :]
+        mean_pose = mean_pose[None, :] ## 不要平均模型的全局旋转
 
         # set shape
         mean_shape = np.zeros((1, 10))
@@ -176,9 +176,9 @@ class H3DWModel(object):
         hand_info_file = osp.join(self.opt.model_root, self.opt.smplx_hand_info_file)
 
         self.hand_info = gnu.load_pkl(hand_info_file)
-        self.right_hand_faces_holistic = self.hand_info['right_hand_faces_holistic']        
-        self.right_hand_faces_local = self.hand_info['right_hand_faces_local']
-        self.right_hand_verts_idx = np.array(self.hand_info['right_hand_verts_idx'], dtype=np.int32)
+        self.right_hand_faces_holistic = self.hand_info['right_hand_faces_holistic'] ## smplx中的顶点序号构成的face        
+        self.right_hand_faces_local = self.hand_info['right_hand_faces_local'] ## 将smplx中手部的第一个点设置为0，构成的local序号
+        self.right_hand_verts_idx = np.array(self.hand_info['right_hand_verts_idx'], dtype=np.int32) ## smplx中右手的顶点序号
 
 
     def set_input_imgonly(self, input):
@@ -191,7 +191,7 @@ class H3DWModel(object):
         hand_rotation = pose_params[:, :3]
         hand_pose = pose_params[:, 3:]
         body_pose = torch.zeros((self.batch_size, 63)).float().cuda() 
-        body_pose[:, 60:] = hand_rotation # set right hand rotation
+        body_pose[:, 60:] = hand_rotation # set right hand rotation # 左右手怎么区分
 
         output = self.smplx(
             global_orient = self.global_orient,
@@ -199,7 +199,7 @@ class H3DWModel(object):
             right_hand_pose = hand_pose,
             betas = shape_params,
             return_verts = True)
-        
+
         hand_output = extract_hand_output(
             output, 
             hand_type = 'right', 
